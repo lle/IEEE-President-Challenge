@@ -1,0 +1,174 @@
+
+prezChallenge.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         0000009a  00000000  00000000  00000074  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .data         00000002  00800060  0000009a  0000010e  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  2 .debug_aranges 00000020  00000000  00000000  00000110  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  3 .debug_pubnames 00000038  00000000  00000000  00000130  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  4 .debug_info   000001ac  00000000  00000000  00000168  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_abbrev 00000120  00000000  00000000  00000314  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_line   000001a6  00000000  00000000  00000434  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_frame  00000030  00000000  00000000  000005dc  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_str    000000ef  00000000  00000000  0000060c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_loc    00000048  00000000  00000000  000006fb  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_ranges 00000048  00000000  00000000  00000743  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0e c0       	rjmp	.+28     	; 0x1e <__ctors_end>
+   2:	20 c0       	rjmp	.+64     	; 0x44 <__bad_interrupt>
+   4:	1f c0       	rjmp	.+62     	; 0x44 <__bad_interrupt>
+   6:	1e c0       	rjmp	.+60     	; 0x44 <__bad_interrupt>
+   8:	1d c0       	rjmp	.+58     	; 0x44 <__bad_interrupt>
+   a:	1c c0       	rjmp	.+56     	; 0x44 <__bad_interrupt>
+   c:	1b c0       	rjmp	.+54     	; 0x44 <__bad_interrupt>
+   e:	1a c0       	rjmp	.+52     	; 0x44 <__bad_interrupt>
+  10:	19 c0       	rjmp	.+50     	; 0x44 <__bad_interrupt>
+  12:	18 c0       	rjmp	.+48     	; 0x44 <__bad_interrupt>
+  14:	17 c0       	rjmp	.+46     	; 0x44 <__bad_interrupt>
+  16:	16 c0       	rjmp	.+44     	; 0x44 <__bad_interrupt>
+  18:	15 c0       	rjmp	.+42     	; 0x44 <__bad_interrupt>
+  1a:	14 c0       	rjmp	.+40     	; 0x44 <__bad_interrupt>
+  1c:	13 c0       	rjmp	.+38     	; 0x44 <__bad_interrupt>
+
+0000001e <__ctors_end>:
+  1e:	11 24       	eor	r1, r1
+  20:	1f be       	out	0x3f, r1	; 63
+  22:	cf e5       	ldi	r28, 0x5F	; 95
+  24:	d2 e0       	ldi	r29, 0x02	; 2
+  26:	de bf       	out	0x3e, r29	; 62
+  28:	cd bf       	out	0x3d, r28	; 61
+
+0000002a <__do_copy_data>:
+  2a:	10 e0       	ldi	r17, 0x00	; 0
+  2c:	a0 e6       	ldi	r26, 0x60	; 96
+  2e:	b0 e0       	ldi	r27, 0x00	; 0
+  30:	ea e9       	ldi	r30, 0x9A	; 154
+  32:	f0 e0       	ldi	r31, 0x00	; 0
+  34:	02 c0       	rjmp	.+4      	; 0x3a <.do_copy_data_start>
+
+00000036 <.do_copy_data_loop>:
+  36:	05 90       	lpm	r0, Z+
+  38:	0d 92       	st	X+, r0
+
+0000003a <.do_copy_data_start>:
+  3a:	a2 36       	cpi	r26, 0x62	; 98
+  3c:	b1 07       	cpc	r27, r17
+  3e:	d9 f7       	brne	.-10     	; 0x36 <.do_copy_data_loop>
+  40:	0f d0       	rcall	.+30     	; 0x60 <main>
+  42:	29 c0       	rjmp	.+82     	; 0x96 <_exit>
+
+00000044 <__bad_interrupt>:
+  44:	dd cf       	rjmp	.-70     	; 0x0 <__vectors>
+
+00000046 <setPWM>:
+
+void setPWM()
+{
+	//setup timer1 with PWM. Will be using both A and B compare outputs.
+	// both compares will be the same but only B will have dead time applied
+	OCR1B = 128;
+  46:	80 e8       	ldi	r24, 0x80	; 128
+  48:	8b bd       	out	0x2b, r24	; 43
+	GTCCR = (1<<PWM1B) | (1<<COM1B0); //Compare B PWM mode with complement outputs
+  4a:	80 e5       	ldi	r24, 0x50	; 80
+  4c:	8c bd       	out	0x2c, r24	; 44
+ 
+	//PLLCSR is not set so the PLL will not be used (are using system clock directly - "synchonous mode")
+	//OCR1C determines the "top" counter value if CTC1 in TCCR1 is set. Otherwise "top" is normal: 0xFF
+	OCR1C = 255;
+  4e:	8f ef       	ldi	r24, 0xFF	; 255
+  50:	8d bd       	out	0x2d, r24	; 45
+	TCCR1 |= (1<<CTC1);
+  52:	80 b7       	in	r24, 0x30	; 48
+  54:	80 68       	ori	r24, 0x80	; 128
+  56:	80 bf       	out	0x30, r24	; 48
+	TCCR1 |= prescaleTimer; 
+  58:	80 b7       	in	r24, 0x30	; 48
+  5a:	84 60       	ori	r24, 0x04	; 4
+  5c:	80 bf       	out	0x30, r24	; 48
+}
+  5e:	08 95       	ret
+
+00000060 <main>:
+
+int main(void) 
+{
+	DDRB = 0xFF;
+  60:	8f ef       	ldi	r24, 0xFF	; 255
+  62:	87 bb       	out	0x17, r24	; 23
+	PORTB = 0xFF;
+  64:	88 bb       	out	0x18, r24	; 24
+  66:	88 e8       	ldi	r24, 0x88	; 136
+  68:	93 e1       	ldi	r25, 0x13	; 19
+    milliseconds can be achieved.
+ */
+void
+_delay_loop_2(uint16_t __count)
+{
+	__asm__ volatile (
+  6a:	29 e1       	ldi	r18, 0x19	; 25
+  6c:	30 e0       	ldi	r19, 0x00	; 0
+  6e:	f9 01       	movw	r30, r18
+  70:	31 97       	sbiw	r30, 0x01	; 1
+  72:	f1 f7       	brne	.-4      	; 0x70 <main+0x10>
+		__ticks = (uint16_t) (__ms * 10.0);
+		while(__ticks)
+		{
+			// wait 1/10 ms
+			_delay_loop_2(((F_CPU) / 4e3) / 10);
+			__ticks --;
+  74:	01 97       	sbiw	r24, 0x01	; 1
+		__ticks = 1;
+	else if (__tmp > 65535)
+	{
+		//	__ticks = requested delay in 1/10 ms
+		__ticks = (uint16_t) (__ms * 10.0);
+		while(__ticks)
+  76:	d9 f7       	brne	.-10     	; 0x6e <main+0xe>
+	_delay_ms(500);
+	PORTB = 0x00;
+  78:	18 ba       	out	0x18, r1	; 24
+
+	setPWM();
+  7a:	e5 df       	rcall	.-54     	; 0x46 <setPWM>
+	OCR1B = 100;
+  7c:	84 e6       	ldi	r24, 0x64	; 100
+  7e:	8b bd       	out	0x2b, r24	; 43
+  80:	24 ed       	ldi	r18, 0xD4	; 212
+  82:	30 e3       	ldi	r19, 0x30	; 48
+
+	while(1)
+	{
+		PORTB |= (1<<PB2);
+  84:	c2 9a       	sbi	0x18, 2	; 24
+  86:	c9 01       	movw	r24, r18
+  88:	01 97       	sbiw	r24, 0x01	; 1
+  8a:	f1 f7       	brne	.-4      	; 0x88 <main+0x28>
+		_delay_ms(50);
+		PORTB &= ~(1<<PB2);
+  8c:	c2 98       	cbi	0x18, 2	; 24
+  8e:	c9 01       	movw	r24, r18
+  90:	01 97       	sbiw	r24, 0x01	; 1
+  92:	f1 f7       	brne	.-4      	; 0x90 <main+0x30>
+  94:	f7 cf       	rjmp	.-18     	; 0x84 <main+0x24>
+
+00000096 <_exit>:
+  96:	f8 94       	cli
+
+00000098 <__stop_program>:
+  98:	ff cf       	rjmp	.-2      	; 0x98 <__stop_program>
